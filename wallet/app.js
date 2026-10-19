@@ -217,9 +217,9 @@ function renderGuide(){
  const shim='<'+'script>(function(){var cache='+preload+';var api={getItem:function(k){return Object.prototype.hasOwnProperty.call(cache,k)?cache[k]:null},setItem:function(k,v){cache[k]=String(v);try{parent.postMessage({type:"wallet-guide-check",key:k,value:String(v)},"*")}catch(e){}},removeItem:function(k){delete cache[k]},clear:function(){cache={}},key:function(i){return Object.keys(cache)[i]||null},get length(){return Object.keys(cache).length}};try{Object.defineProperty(window,"localStorage",{configurable:true,value:api})}catch(e){}})();<'+'/script>';
  let html=S.guide.html;
  if(/<head\b[^>]*>/i.test(html)){
-   html=html.replace(/<head\b[^>]*>/i,match=>match+'<base target="_blank">'+shim);
+   html=html.replace(/<head\b[^>]*>/i,match=>match+'<base target="_self">'+shim);
  }else{
-   html='<!doctype html><html><head><base target="_blank">'+shim+'</head><body>'+html+'</body></html>';
+   html='<!doctype html><html><head><base target="_self">'+shim+'</head><body>'+html+'</body></html>';
  }
  frame.srcdoc=html;
 }

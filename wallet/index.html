@@ -28,8 +28,8 @@ main{max-width:1160px;margin:auto;padding:28px 18px 80px}
 footer{font-size:12px;color:#718177;text-align:center;margin:26px 0}
 @media(max-width:760px){header{padding:13px 16px}.header-actions small{display:none}main{padding:16px 12px 65px}.hero{padding:24px 20px}.cards{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}.cover{height:115px}.section{margin-top:25px}.panel{padding:17px}.line time{flex-basis:66px}.hero:after{right:-36px}}
 .guide-view{background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden}.guide-toolbar{display:flex;align-items:center;justify-content:space-between;gap:9px;padding:11px 12px;border-bottom:1px solid var(--border)}.guide-toolbar p{margin:0;font-size:12px;color:#5c6d64}.guide-frame{display:block;width:100%;height:min(78dvh,870px);min-height:520px;border:0;background:#fff}.guide-view.fullscreen{position:fixed;z-index:500;inset:0;border:0;border-radius:0;display:flex;flex-direction:column}.guide-view.fullscreen .guide-frame{height:auto;min-height:0;flex:1}.guide-view.fullscreen .guide-toolbar{flex:0 0 auto;padding:12px 18px;background:#fff}body.guide-open{overflow:hidden}@media(max-width:760px){#tab-content:has(.guide-view){padding:0;border:0;background:transparent}.guide-frame{height:calc(100dvh - 280px);min-height:470px}.guide-toolbar{flex-wrap:wrap}}</style>
-<script src="./config.js"></script>
-<script type="module" src="./app.js"></script>
+<script src="./config.js?v=20261019-2"></script>
+<script type="module" src="./app.js?v=20261019-2"></script>
 </head><body>
 <header><div class="brand"><div class="logo">✈</div><div><b>Travel Wallet</b><small>PRIVATE FAMILY JOURNEYS</small></div></div><div class="header-actions"><small id="user-email"></small><button id="logout-btn" class="hidden" type="button">Sign out</button></div></header>
 <main>
@@ -44,8 +44,8 @@ footer{font-size:12px;color:#718177;text-align:center;margin:26px 0}
 <p><a href="https://supabase.com/dashboard/projects" target="_blank" rel="noopener">Open Supabase dashboard ↗</a></p>
 </div></section>
 <section id="auth-section" class="section hidden"><div class="panel" style="max-width:540px;margin:auto">
-<h2>Sign in to your wallet</h2><p class="muted">Use an approved family email. We'll send you a secure sign-in link. Only whitelisted members can access trips or files.</p>
-<form id="login-form" class="form"><label>Email address<input name="email" type="email" required autocomplete="email" placeholder="you@example.com"></label><button class="btn primary" type="submit">Email me a sign-in link</button></form></div></section>
+<h2>Sign in to your wallet</h2><p class="muted">Use an approved family email. Each phone and computer signs in separately. Only approved family members can access trips and files.</p>
+<form id="login-form" class="form"><label>Email address<input name="email" type="email" required autocomplete="email" placeholder="you@example.com"></label><button class="btn primary" type="submit">Email me a sign-in link</button></form><div class="notice" style="margin-top:16px"><strong>Signing in on an iPhone?</strong> Request a fresh link on your phone, then open the email link in Safari (not Gmail's built-in mini browser). Return to this Safari tab after verification. Links work once and can expire; wait before retrying if the email service reports a rate limit. Desktop sign-in doesn't automatically log your phone in.</div></div></section>
 <section id="wallet-section" class="hidden">
  <section id="list-screen" class="section"><div class="section-head"><h2>Our journeys</h2><button class="btn primary" id="new-trip">＋ New trip</button></div><div id="trip-list" class="cards"></div></section>
  <section id="trip-screen" class="section hidden"><div class="section-head"><button class="btn sm" id="back-to-trips">← All trips</button><span id="trip-status"></span></div><div class="panel" style="margin-bottom:16px"><h2 id="trip-title" style="margin:0 0 7px;font-size:26px"></h2><div class="muted small" id="trip-meta"></div></div>

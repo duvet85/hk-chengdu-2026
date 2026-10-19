@@ -1,7 +1,7 @@
 // Travel Wallet v1: private data only in Supabase, NEVER in GitHub.
 const el=id=>document.getElementById(id);
 const cfg=window.TRAVEL_WALLET_CONFIG||{};
-const S={api:null,session:null,member:false,trips:[],trip:null,stops:[],reservations:[],documents:[],tab:'stops'};
+const S={api:null,session:null,member:false,trips:[],trip:null,stops:[],reservations:[],documents:[],guide:null,tab:'guide'};
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const hidden=(id,yes)=>el(id).classList.toggle('hidden',yes);
 const date=v=>v?new Date(v.slice(0,10)+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'';
@@ -27,6 +27,7 @@ async function bootstrap(){
  document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{S.tab=b.dataset.tab;tab()});
  el('trip-list').onclick=e=>{let a=e.target.closest('[data-trip]');if(a)openTrip(a.dataset.trip)};
  el('tab-content').onclick=e=>{
+   const max=e.target.closest('[data-guide-max]');if(max){toggleGuideMax();return}
    let a=e.target.closest('[data-open]');if(a){openDocument(a.dataset.open);return}
    let d=e.target.closest('[data-remove]');if(d){removeDocument(d.dataset.remove);return}
  };
@@ -82,21 +83,23 @@ async function openTrip(id){
  el('trip-title').textContent=S.trip.emoji+' '+S.trip.title;
  el('trip-meta').textContent=S.trip.destinations+' · '+date(S.trip.start_date)+' — '+date(S.trip.end_date);
  el('trip-status').innerHTML='<span class="status '+esc(S.trip.status)+'">'+esc(S.trip.status)+'</span>';
- S.tab='stops';await loadData();tab();window.scrollTo(0,0);
+ S.tab='guide';await loadData();tab();window.scrollTo(0,0);
 }
 async function loadData(){
  let id=S.trip.id,results=await Promise.all([
   S.api.from('trip_stops').select('*').eq('trip_id',id).order('stop_date').order('stop_time'),
   S.api.from('reservations').select('*').eq('trip_id',id).order('created_at',{ascending:false}),
-  S.api.from('documents').select('*').eq('trip_id',id).order('created_at',{ascending:false})
+  S.api.from('documents').select('*').eq('trip_id',id).order('created_at',{ascending:false}),
+  S.api.from('trip_guides').select('html,filename').eq('trip_id',id).maybeSingle()
  ]);
  for(let r of results){if(r.error){toast(r.error.message,true);return}}
- S.stops=results[0].data||[];S.reservations=results[1].data||[];S.documents=results[2].data||[];
+ S.stops=results[0].data||[];S.reservations=results[1].data||[];S.documents=results[2].data||[];S.guide=results[3].data||null;
 }
 function tab(){
  document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===S.tab));
- let desc={stops:['Itinerary','＋ Add stop'],reservations:['Bookings','＋ Add booking'],documents:['Private documents','＋ Upload file']};
- el('tab-title').textContent=desc[S.tab][0];el('add-entry').textContent=desc[S.tab][1];
+ let desc={guide:['Interactive travel guide',''],stops:['Timeline','＋ Add stop'],reservations:['Bookings','＋ Add booking'],documents:['Private documents','＋ Upload file']};
+ el('tab-title').textContent=desc[S.tab][0];el('add-entry').textContent=desc[S.tab][1];hidden('add-entry',S.tab==='guide');
+ if(S.tab==='guide'){renderGuide();return}
  if(S.tab==='stops'){
   if(!S.stops.length){el('tab-content').innerHTML=blank('🗺️','No stops yet','Create a timed journey with notes and one-tap map directions.');return}
   let day='';el('tab-content').innerHTML=S.stops.map(s=>{
@@ -117,6 +120,49 @@ function tab(){
   ).join('');
  }
 }
+
+const guideKey=k=>/^japan-check-[0-9]{1,4}$/.test(k)||/^hkc_2026_task_[a-zA-Z0-9_-]{1,120}$/.test(k);
+function guidePreferences(){
+ const prefs={};
+ try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(guideKey(k)){const v=localStorage.getItem(k);if(['0','1','true','false'].includes(v))prefs[k]=v}}}catch(_){}
+ return prefs;
+}
+window.addEventListener('message',event=>{
+ const frame=el('original-guide-frame');
+ if(!frame||event.source!==frame.contentWindow)return;
+ const d=event.data;
+ if(!d||d.type!=='wallet-guide-check'||!guideKey(d.key)||!['0','1','true','false'].includes(d.value))return;
+ try{localStorage.setItem(d.key,d.value)}catch(_){}
+});
+function toggleGuideMax(){
+ const view=el('guide-view');if(!view)return;
+ const active=view.classList.toggle('fullscreen');
+ document.body.classList.toggle('guide-open',active);
+ const button=el('guide-toggle');
+ if(button)button.textContent=active?'✕ Close full screen':'⛶ Full screen';
+}
+document.addEventListener('keydown',e=>{
+ if(e.key==='Escape'&&el('guide-view')?.classList.contains('fullscreen'))toggleGuideMax();
+});
+function renderGuide(){
+ document.body.classList.remove('guide-open');
+ const target=el('tab-content');
+ if(!S.guide?.html){target.innerHTML=blank('📖','No interactive guide yet','A complete HTML itinerary can be attached to this trip privately.');return}
+ target.innerHTML='<div id="guide-view" class="guide-view"><div class="guide-toolbar"><p>Original itinerary · Private family view</p><button type="button" id="guide-toggle" class="btn sm" data-guide-max="1">⛶ Full screen</button></div><iframe id="original-guide-frame" class="guide-frame" title="Interactive itinerary" loading="eager" referrerpolicy="no-referrer" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"></iframe></div>';
+ const frame=el('original-guide-frame');
+ // Sandbox remains opaque-origin. Do not use allow-same-origin: original HTML may contain scripts.
+ // A small virtual localStorage lets legacy trip checklist code work inside a sandboxed iframe.
+ const preload=JSON.stringify(guidePreferences()).replace(/</g,'\\u003c');
+ const shim='<'+'script>(function(){var cache='+preload+';var api={getItem:function(k){return Object.prototype.hasOwnProperty.call(cache,k)?cache[k]:null},setItem:function(k,v){cache[k]=String(v);try{parent.postMessage({type:"wallet-guide-check",key:k,value:String(v)},"*")}catch(e){}},removeItem:function(k){delete cache[k]},clear:function(){cache={}},key:function(i){return Object.keys(cache)[i]||null},get length(){return Object.keys(cache).length}};try{Object.defineProperty(window,"localStorage",{configurable:true,value:api})}catch(e){}})();<'+'/script>';
+ let html=S.guide.html;
+ if(/<head\b[^>]*>/i.test(html)){
+   html=html.replace(/<head\b[^>]*>/i,match=>match+'<base target="_blank">'+shim);
+ }else{
+   html='<!doctype html><html><head><base target="_blank">'+shim+'</head><body>'+html+'</body></html>';
+ }
+ frame.srcdoc=html;
+}
+
 function fld(label,name,type='text',options={}){
  let attr=options.required?' required':'';
  let val=options.value===undefined?'':esc(options.value);

@@ -37,7 +37,7 @@ async function bootstrap(){
    S.api=mod.createClient(cfg.supabaseUrl,cfg.supabasePublishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
    let res=await S.api.auth.getSession();if(res.error)throw res.error;
    S.session=res.data.session;await authorize();
-   S.api.auth.onAuthStateChange((_ev,session)=>{S.session=session;authorize()});
+   S.api.auth.onAuthStateChange((_ev,session)=>{S.session=session;setTimeout(()=>authorize(),0)});
  }catch(err){note('Unable to initialise Supabase: '+err.message,'error')}
 }
 async function authorize(){

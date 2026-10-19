@@ -1,8 +1,6 @@
 -- TRAVEL WALLET v1 — run this ONLY in a dedicated Supabase project.
 -- A single household wallet shared by explicitly approved auth.users.
 -- Never put a service-role key, booking document, or password in GitHub.
-create extension if not exists pgcrypto;
-
 create table if not exists public.wallet_members (
   user_id uuid primary key references auth.users(id) on delete cascade,
   display_name text not null default 'Family member',
@@ -77,16 +75,7 @@ grant usage on schema public to authenticated;
 grant select on public.wallet_members to authenticated;
 grant select,insert,update,delete on public.trips,public.trip_stops,public.reservations,public.documents to authenticated;
 
--- SECURITY DEFINER bypasses wallet_members RLS to check whitelist. No user may add themself.
-create or replace function public.is_wallet_member()
-returns boolean language sql stable security definer set search_path='' as $$
-  select exists(
-    select 1 from public.wallet_members m
-    where m.user_id = (select auth.uid())
-  );
-$$;
-revoke all on function public.is_wallet_member() from public, anon;
-grant execute on function public.is_wallet_member() to authenticated;
+-- Member access is checked using wallet_members row-level security. Users cannot add themselves.
 
 drop policy if exists wallet_self on public.wallet_members;
 create policy wallet_self on public.wallet_members for select to authenticated
@@ -96,25 +85,25 @@ drop policy if exists trips_read on public.trips;
 drop policy if exists trips_insert on public.trips;
 drop policy if exists trips_update on public.trips;
 drop policy if exists trips_delete on public.trips;
-create policy trips_read on public.trips for select to authenticated using ((select public.is_wallet_member()));
-create policy trips_insert on public.trips for insert to authenticated with check ((select public.is_wallet_member()));
-create policy trips_update on public.trips for update to authenticated using ((select public.is_wallet_member())) with check ((select public.is_wallet_member()));
-create policy trips_delete on public.trips for delete to authenticated using ((select public.is_wallet_member()));
+create policy trips_read on public.trips for select to authenticated using (exists (select 1 from public.wallet_members m where m.user_id = (select auth.uid())));
+create policy trips_insert on public.trips for insert to authenticated with check (exists (select 1 from public.wallet_members m where m.user_id = (select auth.uid())));
+create policy trips_update on public.trips for update to authenticated using (exists (select 1 from public.wallet_members m where m.user_id = (select auth.uid()))) with check (exists (select 1 from public.wallet_members m where m.user_id = (select auth.uid())));
+create policy trips_delete on public.trips for delete to authenticated using (exists (select 1 from public.wallet_members m where m.user_id = (select auth.uid())));
 
 drop policy if exists stop_access on public.trip_stops;
 create policy stop_access on public.trip_stops for all to authenticated
-using ((select public.is_wallet_member()) and exists(select 1 from public.trips t where t.id=trip_id))
-with check ((select public.is_wallet_member()) and exists(select 1 from public.trips t where t.id=trip_id));
+using (exists (select 1 from public.wallet_members m where m.user_id = (select auth.uid())) and exists(select 1 from public.trips t where t.id=trip_id))
+with check (exists (select 1 from public.wallet_members m where m.user_id = (select auth.uid())) and exists(select 1 from public.trips t where t.id=trip_id));
 
 drop policy if exists reservation_access on public.reservations;
 create policy reservation_access on public.reservations for all to authenticated
-using ((select public.is_wallet_member()) and exists(select 1 from public.trips t where t.id=trip_id))
-with check ((select public.is_wallet_member()) and exists(select 1 from public.trips t where t.id=trip_id));
+using (exists (select 1 from public.wallet_members m where m.user_id = (select auth.uid())) and exists(select 1 from public.trips t where t.id=trip_id))
+with check (exists (select 1 from public.wallet_members m where m.user_id = (select auth.uid())) and exists(select 1 from public.trips t where t.id=trip_id));
 
 drop policy if exists document_access on public.documents;
 create policy document_access on public.documents for all to authenticated
-using ((select public.is_wallet_member()) and exists(select 1 from public.trips t where t.id=trip_id))
-with check ((select public.is_wallet_member()) and exists(select 1 from public.trips t where t.id=trip_id)
+using (exists (select 1 from public.wallet_members m where m.user_id = (select auth.uid())) and exists(select 1 from public.trips t where t.id=trip_id))
+with check (exists (select 1 from public.wallet_members m where m.user_id = (select auth.uid())) and exists(select 1 from public.trips t where t.id=trip_id)
   and object_path like trip_id::text || '/%');
 
 -- Physical document bytes live in PRIVATE Supabase Storage, never in the git repo.
@@ -124,26 +113,16 @@ array['application/pdf','image/jpeg','image/png','image/webp','application/vnd.a
 on conflict(id) do update
 set public=false,file_size_limit=excluded.file_size_limit,allowed_mime_types=excluded.allowed_mime_types;
 
-create or replace function public.is_wallet_document_path(object_name text)
-returns boolean language sql stable security definer set search_path='' as $$
- select exists(
-   select 1 from public.trips t
-   where t.id::text=split_part(object_name,'/',1)
-   and object_name <> t.id::text || '/'
- );
-$$;
-revoke all on function public.is_wallet_document_path(text) from public,anon;
-grant execute on function public.is_wallet_document_path(text) to authenticated;
 
 drop policy if exists wallet_storage_select on storage.objects;
 drop policy if exists wallet_storage_insert on storage.objects;
 drop policy if exists wallet_storage_delete on storage.objects;
 create policy wallet_storage_select on storage.objects for select to authenticated
-using(bucket_id='travel-documents' and (select public.is_wallet_member()) and public.is_wallet_document_path(name));
+using(bucket_id='travel-documents' and exists (select 1 from public.wallet_members m where m.user_id = (select auth.uid())) and exists (select 1 from public.trips t where t.id::text=split_part(name,'/',1)));
 create policy wallet_storage_insert on storage.objects for insert to authenticated
-with check(bucket_id='travel-documents' and (select public.is_wallet_member()) and public.is_wallet_document_path(name));
+with check(bucket_id='travel-documents' and exists (select 1 from public.wallet_members m where m.user_id = (select auth.uid())) and exists (select 1 from public.trips t where t.id::text=split_part(name,'/',1)));
 create policy wallet_storage_delete on storage.objects for delete to authenticated
-using(bucket_id='travel-documents' and (select public.is_wallet_member()) and public.is_wallet_document_path(name));
+using(bucket_id='travel-documents' and exists (select 1 from public.wallet_members m where m.user_id = (select auth.uid())) and exists (select 1 from public.trips t where t.id::text=split_part(name,'/',1)));
 
 -- Add members ONLY through SQL editor after they use the website email sign-in once.
 -- Example (replace with actual confirmed emails, never commit real family emails publicly):

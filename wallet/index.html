@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#143D37"><meta name="robots" content="noindex,nofollow">
+<title>Travel Wallet — Private Family Journeys</title>
+<link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icon.svg" type="image/svg+xml">
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#1d302e;background:#f7f7f3;--green:#17443a;--muted:#6a7772;--border:#e2e8e3;--paper:#fff}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0}button,input,select,textarea{font:inherit}button{cursor:pointer}a{color:#156754;text-decoration:none}a:hover{text-decoration:underline}
+header{background:#143d37;color:#fff;padding:18px max(20px,calc((100vw - 1160px)/2));display:flex;gap:16px;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:12px}.logo{width:44px;height:44px;border-radius:14px;background:#deecdd;color:#143d37;display:grid;place-items:center;font-size:24px}.brand b{display:block;font-size:18px}.brand small{color:#c0d5cc}
+.header-actions{display:flex;align-items:center;gap:12px}.header-actions button{border:1px solid #8ba99d;border-radius:12px;padding:9px 13px;color:#fff;background:transparent}.header-actions small{color:#d8e4de}
+main{max-width:1160px;margin:auto;padding:28px 18px 80px}
+.hero{border-radius:26px;padding:32px;background:radial-gradient(ellipse at 90% 10%,#3e8268,transparent 45%),linear-gradient(120deg,#173f37,#265d4e);color:#fff;overflow:hidden;position:relative}
+.hero:after{content:"✈";font-size:170px;position:absolute;right:24px;top:-34px;opacity:.12;transform:rotate(-15deg);pointer-events:none}.eyebrow{text-transform:uppercase;font-size:11px;letter-spacing:.15em;font-weight:800;color:#c5ddd0}.hero h1{font-size:clamp(27px,5vw,43px);margin:9px 0}.hero p{max-width:560px;line-height:1.65;color:#e0eee8}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}.btn{border:1px solid var(--border);border-radius:12px;padding:11px 16px;background:#fff;color:#244b3d;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:7px}.btn.primary{background:#1e6554;color:#fff;border-color:#1e6554}.btn.light{background:#fff;color:#183f35}.btn.ghost{background:transparent;color:#fff;border-color:#a7cbb8}.btn.sm{padding:7px 11px;font-size:13px}.btn:disabled{opacity:.5;cursor:wait}.btn.danger{color:#a53030;border-color:#f0d2d2}
+.section{margin-top:32px}.section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.section h2{font-size:21px;letter-spacing:-.02em;margin:0}.muted{color:var(--muted)}.small{font-size:13px}.tiny{font-size:11px}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.card{background:#fff;border:1px solid var(--border);border-radius:19px;overflow:hidden;box-shadow:0 6px 18px #132b1f08}.trip-card{display:block;cursor:pointer}.cover{height:140px;display:flex;align-items:end;padding:16px;color:white;background:radial-gradient(circle at 85% 20%,#8ac7ae 0%,transparent 40%),linear-gradient(120deg,#143e34,#3d8874);position:relative}.cover .emoji{font-size:60px;position:absolute;right:20px;top:25px;filter:drop-shadow(0 5px 6px #0002)}.cover small{position:relative;font-size:12px;letter-spacing:.05em}.card-body{padding:18px}.card-body h3{margin:4px 0 9px;font-size:18px}.status{display:inline-block;padding:5px 9px;border-radius:100px;background:#eaf4ed;color:#23604d;font-size:11px;font-weight:700}.status.pending{background:#fff3de;color:#855f25}.status.completed{background:#e5ebf4;color:#4a6080}
+.panel{background:#fff;border:1px solid var(--border);border-radius:18px;padding:22px}.blank{text-align:center;padding:44px 18px;color:var(--muted)}.blank .big{font-size:44px;margin-bottom:12px}.blank h3{color:#203c34;margin:3px 0}.blank p{max-width:450px;margin:7px auto 18px;line-height:1.6}.hidden{display:none!important}
+.tabs{display:flex;gap:7px;overflow-x:auto;border-bottom:1px solid var(--border);padding-bottom:11px;margin-bottom:16px}.tab{white-space:nowrap;border:0;background:transparent;border-radius:11px;padding:10px 13px;color:#57645e;font-weight:700}.tab.active{background:#e6f1ea;color:#1d5a45}
+.line{border-top:1px solid var(--border);padding:16px 0;display:flex;align-items:flex-start;gap:12px}.line:first-of-type{border-top:0}.line time{flex:0 0 86px;color:#61756b;font-size:12px;padding-top:5px;font-variant-numeric:tabular-nums}.line-content{flex:1;min-width:0}.line-content b{display:block;margin-bottom:5px}.line-content p{margin:4px 0 7px;font-size:14px;line-height:1.5;color:#5d6f64}.line-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:8px}.pill-link{font-size:12px;background:#e9f3ee;color:#245f4c;border-radius:9px;padding:7px 9px;font-weight:700}.doc-icon{width:44px;height:44px;border-radius:11px;background:#e9f1ec;display:grid;place-items:center;flex:0 0 auto;font-size:22px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.mini{padding:20px;background:#fff;border:1px solid var(--border);border-radius:16px}.mini b{display:block;margin-bottom:6px}.mini p{margin:5px 0;color:#5a7165;font-size:13px;line-height:1.6}
+.form{display:grid;gap:14px}.form label{font-size:12px;font-weight:700;color:#455e52;display:grid;gap:6px}.form input,.form select,.form textarea{width:100%;border:1px solid #d4dfd6;padding:12px;border-radius:10px;background:#fff;color:#1f3930;min-width:0}.form textarea{min-height:90px;resize:vertical}
+.dialog{border:0;border-radius:18px;box-shadow:0 16px 80px #10231e45;padding:0;width:min(92vw,530px);max-height:90vh}.dialog::backdrop{background:#091c18a1}.dlg-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border)}.dlg-head h2{font-size:19px;margin:0}.dlg-body{padding:22px;overflow-y:auto;max-height:70vh}.x{background:transparent;border:0;color:#65726c;font-size:23px}
+.notice{padding:13px 15px;background:#fff4da;border:1px solid #f6e0a5;border-radius:12px;color:#705320;font-size:13px;line-height:1.55}.success{padding:12px 15px;background:#e5f5eb;border-radius:12px;color:#246342;font-size:13px}.error{padding:12px 15px;background:#ffedeb;border-radius:12px;color:#972f2f;font-size:13px}
+.step{display:flex;gap:12px;margin:13px 0;line-height:1.55;font-size:14px}.bubble{display:grid;place-items:center;border-radius:100px;background:#d7e8de;color:#225945;width:28px;height:28px;flex-shrink:0;font-weight:800;font-size:12px}
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);max-width:min(94vw,600px);background:#173a32;color:#fff;z-index:100;border-radius:12px;padding:13px 18px;box-shadow:0 4px 18px #0003;display:none}
+footer{font-size:12px;color:#718177;text-align:center;margin:26px 0}
+@media(max-width:760px){header{padding:13px 16px}.header-actions small{display:none}main{padding:16px 12px 65px}.hero{padding:24px 20px}.cards{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}.cover{height:115px}.section{margin-top:25px}.panel{padding:17px}.line time{flex-basis:66px}.hero:after{right:-36px}}
+</style>
+<script src="./config.js"></script>
+<script type="module" src="./app.js"></script>
+</head><body>
+<header><div class="brand"><div class="logo">✈</div><div><b>Travel Wallet</b><small>PRIVATE FAMILY JOURNEYS</small></div></div><div class="header-actions"><small id="user-email"></small><button id="logout-btn" class="hidden" type="button">Sign out</button></div></header>
+<main>
+<section class="hero"><div class="eyebrow">Your personal travel companion</div><h1>Every journey. One place.</h1><p>Keep your plans, reservations, boarding passes and hotel vouchers together. Private by design, available to the people you choose.</p><div id="hero-actions" class="actions"></div></section>
+<div id="message" aria-live="polite" style="margin-top:14px"></div>
+<section id="setup-section" class="section hidden"><div class="panel">
+<h2>Connect your private vault</h2><p class="muted">The interface is published, but no private storage has been connected. Documents must never be uploaded to a public GitHub repository.</p>
+<div class="step"><div class="bubble">1</div><div>Make a dedicated Supabase project for your household's travel wallet.</div></div>
+<div class="step"><div class="bubble">2</div><div>Run the included <code>schema.sql</code> in that project's SQL Editor. Create your family member accounts and approve their user IDs as shown in the SQL comments.</div></div>
+<div class="step"><div class="bubble">3</div><div>Set <code>supabaseUrl</code> and <code>supabasePublishableKey</code> in <code>config.js</code> (publishable key only, never the service-role key). Configure the site's URL as an auth redirect in Supabase.</div></div>
+<div class="notice">Do not add passports, booking numbers, tickets, or any private files until login and database security are configured and tested.</div>
+<p><a href="https://supabase.com/dashboard/projects" target="_blank" rel="noopener">Open Supabase dashboard ↗</a></p>
+</div></section>
+<section id="auth-section" class="section hidden"><div class="panel" style="max-width:540px;margin:auto">
+<h2>Sign in to your wallet</h2><p class="muted">Use an approved family email. We'll send you a secure sign-in link. Only whitelisted members can access trips or files.</p>
+<form id="login-form" class="form"><label>Email address<input name="email" type="email" required autocomplete="email" placeholder="you@example.com"></label><button class="btn primary" type="submit">Email me a sign-in link</button></form></div></section>
+<section id="wallet-section" class="hidden">
+ <section id="list-screen" class="section"><div class="section-head"><h2>Our journeys</h2><button class="btn primary" id="new-trip">＋ New trip</button></div><div id="trip-list" class="cards"></div></section>
+ <section id="trip-screen" class="section hidden"><div class="section-head"><button class="btn sm" id="back-to-trips">← All trips</button><span id="trip-status"></span></div><div class="panel" style="margin-bottom:16px"><h2 id="trip-title" style="margin:0 0 7px;font-size:26px"></h2><div class="muted small" id="trip-meta"></div></div>
+ <div class="tabs"><button class="tab active" data-tab="stops">🗓 Itinerary</button><button class="tab" data-tab="reservations">🎟 Bookings</button><button class="tab" data-tab="documents">🔒 Documents</button></div><div class="section-head"><h2 id="tab-title">Itinerary</h2><button class="btn primary sm" id="add-entry">＋ Add stop</button></div><div id="tab-content" class="panel"></div></section>
+ <section class="section"><div class="grid2"><div class="mini"><b>🔒 Private by design</b><p>Boarding passes and vouchers go into a private Supabase bucket, never GitHub Pages. Files open using short-lived links after authentication.</p></div><div class="mini"><b>📱 Travel-ready</b><p>Add this website to your iPhone Home Screen. App shell works without a network, but private documents currently need connectivity to open.</p></div></div></section>
+</section>
+<footer>Travel Wallet · Family-only database · GitHub Pages frontend · Private Supabase storage</footer>
+</main>
+<dialog id="editor" class="dialog"><div class="dlg-head"><h2 id="dialog-title">Add</h2><button class="x" id="close-dialog" aria-label="Close" type="button">×</button></div><div class="dlg-body"><form id="editor-form" class="form"></form></div></dialog>
+<div id="toast" role="status"></div>
+</body></html>

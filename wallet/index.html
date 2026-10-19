@@ -29,9 +29,9 @@ footer{font-size:12px;color:#718177;text-align:center;margin:26px 0}
 @media(max-width:760px){header{padding:13px 16px}.header-actions small{display:none}main{padding:16px 12px 65px}.hero{padding:24px 20px}.cards{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}.cover{height:115px}.section{margin-top:25px}.panel{padding:17px}.line time{flex-basis:66px}.hero:after{right:-36px}}
 .guide-view{background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden}.guide-toolbar{display:flex;align-items:center;justify-content:space-between;gap:9px;padding:11px 12px;border-bottom:1px solid var(--border)}.guide-toolbar p{margin:0;font-size:12px;color:#5c6d64}.guide-frame{display:block;width:100%;height:min(78dvh,870px);min-height:520px;border:0;background:#fff}.guide-view.fullscreen{position:fixed;z-index:500;inset:0;border:0;border-radius:0;display:flex;flex-direction:column}.guide-view.fullscreen .guide-frame{height:auto;min-height:0;flex:1}.guide-view.fullscreen .guide-toolbar{flex:0 0 auto;padding:12px 18px;background:#fff}body.guide-open{overflow:hidden}@media(max-width:760px){#tab-content:has(.guide-view){padding:0;border:0;background:transparent}.guide-frame{height:calc(100dvh - 280px);min-height:470px}.guide-toolbar{flex-wrap:wrap}}</style>
 <script src="./config.js?v=20261019-2"></script>
-<script type="module" src="./app.js?v=20261019-2"></script>
+<script type="module" src="./app.js?v=20261019-password"></script>
 </head><body>
-<header><div class="brand"><div class="logo">✈</div><div><b>Travel Wallet</b><small>PRIVATE FAMILY JOURNEYS</small></div></div><div class="header-actions"><small id="user-email"></small><button id="logout-btn" class="hidden" type="button">Sign out</button></div></header>
+<header><div class="brand"><div class="logo">✈</div><div><b>Travel Wallet</b><small>PRIVATE FAMILY JOURNEYS</small></div></div><div class="header-actions"><small id="user-email"></small><button id="set-password-btn" class="hidden" type="button">Set up password</button><button id="logout-btn" class="hidden" type="button">Sign out</button></div></header>
 <main>
 <section class="hero"><div class="eyebrow">Your personal travel companion</div><h1>Every journey. One place.</h1><p>Keep your plans, reservations, boarding passes and hotel vouchers together. Private by design, available to the people you choose.</p><div id="hero-actions" class="actions"></div></section>
 <div id="message" aria-live="polite" style="margin-top:14px"></div>
@@ -44,16 +44,38 @@ footer{font-size:12px;color:#718177;text-align:center;margin:26px 0}
 <p><a href="https://supabase.com/dashboard/projects" target="_blank" rel="noopener">Open Supabase dashboard ↗</a></p>
 </div></section>
 <section id="auth-section" class="section hidden"><div class="panel" style="max-width:540px;margin:auto">
-<h2>Sign in to your wallet</h2><p class="muted">Use an approved family email. Each phone and computer signs in separately. Only approved family members can access trips and files.</p>
-<form id="login-form" class="form"><label>Email address<input name="email" type="email" required autocomplete="email" placeholder="you@example.com"></label><button class="btn primary" type="submit">Email me a sign-in link</button></form><div class="notice" style="margin-top:16px"><strong>Signing in on an iPhone?</strong> Request a fresh link on your phone, then open the email link in Safari (not Gmail's built-in mini browser). Return to this Safari tab after verification. Links work once and can expire; wait before retrying if the email service reports a rate limit. Desktop sign-in doesn't automatically log your phone in.</div></div></section>
+<h2>Sign in to your wallet</h2><p class="muted">Only approved family accounts can view trips and private documents. Each phone and computer signs in separately.</p>
+<div class="tabs auth-tabs" role="group" aria-label="Choose sign-in method">
+<button type="button" class="tab active" id="auth-password-tab">Password</button>
+<button type="button" class="tab" id="auth-email-tab">Email link</button>
+</div>
+<form id="password-login-form" class="form">
+<label>Email address<input name="email" type="email" autocomplete="username" required placeholder="you@example.com"></label>
+<label>Password<input name="password" type="password" autocomplete="current-password" required></label>
+<button class="btn primary" type="submit">Sign in with password</button>
+<p class="muted small" style="margin:0">Already signed in on your desktop? Open <strong>Set up password</strong> there first. This login does not send an email.</p>
+</form>
+<div id="magic-login-panel" class="hidden"><form id="login-form" class="form">
+<label>Email address<input name="email" type="email" required autocomplete="email" placeholder="you@example.com"></label>
+<button class="btn primary" type="submit">Email me a sign-in link</button></form>
+<div class="notice" style="margin-top:16px">Supabase's built-in email service allows only <strong>two sign-in emails per hour, shared by the whole project</strong>. If the rate limit is exceeded, please wait before trying again. On iPhone, open the email link in Safari, not an in-app browser.</div></div>
+</div></section>
 <section id="wallet-section" class="hidden">
  <section id="list-screen" class="section"><div class="section-head"><h2>Our journeys</h2><button class="btn primary" id="new-trip">＋ New trip</button></div><div id="trip-list" class="cards"></div></section>
  <section id="trip-screen" class="section hidden"><div class="section-head"><button class="btn sm" id="back-to-trips">← All trips</button><span id="trip-status"></span></div><div class="panel" style="margin-bottom:16px"><h2 id="trip-title" style="margin:0 0 7px;font-size:26px"></h2><div class="muted small" id="trip-meta"></div></div>
  <div class="tabs"><button class="tab active" data-tab="guide">📖 Interactive guide</button><button class="tab" data-tab="stops">🗓 Timeline</button><button class="tab" data-tab="reservations">🎟 Bookings</button><button class="tab" data-tab="documents">🔒 Documents</button></div><div class="section-head"><h2 id="tab-title">Itinerary</h2><button class="btn primary sm" id="add-entry">＋ Add stop</button></div><div id="tab-content" class="panel"></div></section>
- <section class="section"><div class="grid2"><div class="mini"><b>🔒 Private by design</b><p>Boarding passes and vouchers go into a private Supabase bucket, never GitHub Pages. Files open using short-lived links after authentication.</p></div><div class="mini"><b>📱 Travel-ready</b><p>Add this website to your iPhone Home Screen. Add this website to your iPhone Home Screen. Private documents require internet access to open.</p></div></div></section>
+ <section class="section"><div class="grid2"><div class="mini"><b>🔒 Private by design</b><p>Boarding passes and vouchers go into a private Supabase bucket, never GitHub Pages. Files open using short-lived links after authentication.</p></div><div class="mini"><b>📱 Travel-ready</b><p>Add this website to your iPhone Home Screen. Private documents require internet access to open.</p></div></div></section>
 </section>
 <footer>Travel Wallet · Family-only database · GitHub Pages frontend · Private Supabase storage</footer>
 </main>
+<dialog id="password-dialog" class="dialog">
+<div class="dlg-head"><h2>Create or change your password</h2><button class="x" id="password-close" aria-label="Close" type="button">×</button></div>
+<div class="dlg-body"><p class="muted small">Set a strong, unique password while signed in. You can then sign in from your iPhone without requesting a new email link. Passwords are sent only to Supabase Auth and are never saved to GitHub or Travel Wallet trip tables.</p>
+<form id="set-password-form" class="form">
+<label>New password (at least 12 characters)<input type="password" name="password" autocomplete="new-password" minlength="12" required></label>
+<label>Confirm new password<input type="password" name="confirm" autocomplete="new-password" minlength="12" required></label>
+<button class="btn primary" type="submit">Save password</button>
+</form></div></dialog>
 <dialog id="editor" class="dialog"><div class="dlg-head"><h2 id="dialog-title">Add</h2><button class="x" id="close-dialog" aria-label="Close" type="button">×</button></div><div class="dlg-body"><form id="editor-form" class="form"></form></div></dialog>
 <div id="toast" role="status"></div>
 </body></html>

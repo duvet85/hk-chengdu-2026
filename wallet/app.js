@@ -182,7 +182,7 @@ function tab(){
  }
 }
 
-const guideKey=k=>/^japan-check-[0-9]{1,4}$/.test(k)||/^hkc_2026_task_[a-zA-Z0-9_-]{1,120}$/.test(k);
+const guideKey=k=>/^japan-check-[0-9]{1,4}$/.test(k)||/^hkc_2026_task_[a-zA-Z0-9_-]{1,120}$/.test(k)||/^hk27_check_[0-9]{1,2}$/.test(k);
 function guidePreferences(){
  const prefs={};
  try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(guideKey(k)){const v=localStorage.getItem(k);if(['0','1','true','false'].includes(v))prefs[k]=v}}}catch(_){}

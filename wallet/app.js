@@ -11,7 +11,7 @@ const blank=(icon,title,msg)=>'<div class="blank"><div class="big">'+icon+'</div
 function note(msg,type){el('message').innerHTML=msg?'<div class="'+(type||'notice')+'">'+esc(msg)+'</div>':''}
 function screen(){
  let active=Boolean(S.api&&S.session&&S.member),configured=Boolean(cfg.supabaseUrl&&cfg.supabasePublishableKey);
- hidden('setup-section',configured);hidden('auth-section',!configured||active);hidden('wallet-section',!active);hidden('logout-btn',!S.session);
+ hidden('setup-section',configured);hidden('auth-section',!configured||active);hidden('wallet-section',!active);hidden('logout-btn',!S.session);hidden('set-password-btn',!active);
  el('user-email').textContent=S.session?.user?.email||'';
  el('hero-actions').innerHTML=active?'<button id="quick-add" class="btn light">＋ New trip</button>':configured?'<span class="status">Members-only sign in</span>':'<span class="status pending">Secure vault setup required</span>';
  if(active)el('quick-add').onclick=()=>editor('trip');
@@ -19,6 +19,12 @@ function screen(){
 async function bootstrap(){
  el('logout-btn').onclick=async()=>{await S.api.auth.signOut();S.session=null;S.member=false;screen()};
  el('login-form').onsubmit=login;
+ el('password-login-form').onsubmit=loginPassword;
+ el('set-password-btn').onclick=()=>el('password-dialog').showModal();
+ el('set-password-form').onsubmit=setAccountPassword;
+ el('password-close').onclick=()=>el('password-dialog').close();
+ el('auth-password-tab').onclick=()=>authMethod('password');
+ el('auth-email-tab').onclick=()=>authMethod('email');
  el('new-trip').onclick=()=>editor('trip');
  el('back-to-trips').onclick=()=>{S.trip=null;hidden('trip-screen',true);hidden('list-screen',false)};
  el('add-entry').onclick=()=>editor(S.tab==='stops'?'stop':S.tab==='reservations'?'reservation':'document');
@@ -56,13 +62,68 @@ async function authorize(){
  }
  screen();if(S.member)await loadTrips();
 }
-async function login(e){
- e.preventDefault();let button=e.target.querySelector('button');button.disabled=true;
- let email=new FormData(e.target).get('email');
+
+function authMethod(method){
+ const password=method==='password';
+ hidden('password-login-form',!password);
+ hidden('magic-login-panel',password);
+ el('auth-password-tab').classList.toggle('active',password);
+ el('auth-email-tab').classList.toggle('active',!password);
+ note('');
+}
+async function loginPassword(e){
+ e.preventDefault();
+ const form=e.currentTarget,button=form.querySelector('[type=submit]'),values=new FormData(form);
+ const email=String(values.get('email')||'').trim().toLowerCase();
+ const password=String(values.get('password')||'');
+ if(!email||!password){note('Enter your email and password.','error');return}
+ button.disabled=true;
  try{
-  let r=await S.api.auth.signInWithOtp({email,options:{emailRedirectTo:location.origin+location.pathname,shouldCreateUser:true}});
-  if(r.error)throw r.error;note('Sign-in link sent. Open the email and follow the link on this device.','success');
- }catch(err){note(err.message,'error')}finally{button.disabled=false}
+  const {error}=await S.api.auth.signInWithPassword({email,password});
+  if(error)throw error;
+  form.reset();
+  note('');
+ }catch(err){
+  note(err.message||'Password sign-in failed. If you have not created a password yet, set it from your signed-in desktop or use an email link when the rate limit resets.','error');
+ }finally{button.disabled=false}
+}
+async function setAccountPassword(e){
+ e.preventDefault();
+ if(!S.session||!S.member){toast('Sign in to the family wallet first.',true);return}
+ const form=e.currentTarget,button=form.querySelector('[type=submit]'),values=new FormData(form);
+ const password=String(values.get('password')||''),confirmPassword=String(values.get('confirm')||'');
+ if(password.length<12){toast('Use at least 12 characters.',true);return}
+ if(password!==confirmPassword){toast('The passwords do not match.',true);return}
+ button.disabled=true;
+ try{
+  const {error}=await S.api.auth.updateUser({password});
+  if(error)throw error;
+  form.reset();
+  el('password-dialog').close();
+  toast('Password saved. You can now sign in on your phone using your email and password.');
+ }catch(err){
+  toast('Password not updated: '+(err.message||'Please try again'),true);
+ }finally{button.disabled=false}
+}
+
+async function login(e){
+ e.preventDefault();
+ const form=e.currentTarget,button=form.querySelector('[type=submit]');
+ const email=String(new FormData(form).get('email')||'').trim().toLowerCase();
+ const last=Number(sessionStorage.getItem('wallet-last-magic-link')||'0');
+ if(Date.now()-last<60000){note('Please wait at least 60 seconds between email-link requests.','notice');return}
+ button.disabled=true;
+ try{
+  const r=await S.api.auth.signInWithOtp({email,options:{emailRedirectTo:location.origin+location.pathname,shouldCreateUser:false}});
+  if(r.error)throw r.error;
+  sessionStorage.setItem('wallet-last-magic-link',String(Date.now()));
+  note('Sign-in link sent. Open the email link on your phone in Safari.','success');
+ }catch(err){
+  const code=String(err?.code||'').toLowerCase(),message=String(err?.message||'');
+  if(code.includes('over_email_send_rate_limit')||message.toLowerCase().includes('rate limit'))
+   note('Supabase has reached its email quota (2 emails per hour for the entire project). Stop requesting links for now. If you are signed in on your desktop, use Set up password there, then choose Password on this phone. Otherwise try again after the sending allowance resets.','error');
+  else note(message||'Unable to request a sign-in link.','error');
+ }finally{button.disabled=false}
 }
 async function loadTrips(){
  let r=await S.api.from('trips').select('*').order('start_date',{ascending:false});

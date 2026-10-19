@@ -27,7 +27,13 @@ main{max-width:1160px;margin:auto;padding:28px 18px 80px}
 #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);max-width:min(94vw,600px);background:#173a32;color:#fff;z-index:100;border-radius:12px;padding:13px 18px;box-shadow:0 4px 18px #0003;display:none}
 footer{font-size:12px;color:#718177;text-align:center;margin:26px 0}
 @media(max-width:760px){header{padding:13px 16px}.header-actions small{display:none}main{padding:16px 12px 65px}.hero{padding:24px 20px}.cards{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}.cover{height:115px}.section{margin-top:25px}.panel{padding:17px}.line time{flex-basis:66px}.hero:after{right:-36px}}
-.guide-view{background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden}.guide-toolbar{display:flex;align-items:center;justify-content:space-between;gap:9px;padding:11px 12px;border-bottom:1px solid var(--border)}.guide-toolbar p{margin:0;font-size:12px;color:#5c6d64}.guide-frame{display:block;width:100%;height:min(78dvh,870px);min-height:520px;border:0;background:#fff}.guide-view.fullscreen{position:fixed;z-index:500;inset:0;border:0;border-radius:0;display:flex;flex-direction:column}.guide-view.fullscreen .guide-frame{height:auto;min-height:0;flex:1}.guide-view.fullscreen .guide-toolbar{flex:0 0 auto;padding:12px 18px;background:#fff}body.guide-open{overflow:hidden}@media(max-width:760px){#tab-content:has(.guide-view){padding:0;border:0;background:transparent}.guide-frame{height:calc(100dvh - 280px);min-height:470px}.guide-toolbar{flex-wrap:wrap}}</style>
+.guide-view{background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden}.guide-toolbar{display:flex;align-items:center;justify-content:space-between;gap:9px;padding:11px 12px;border-bottom:1px solid var(--border)}.guide-toolbar p{margin:0;font-size:12px;color:#5c6d64}.guide-frame{display:block;width:100%;height:min(78dvh,870px);min-height:520px;border:0;background:#fff}.guide-view.fullscreen{position:fixed;z-index:500;inset:0;border:0;border-radius:0;display:flex;flex-direction:column}.guide-view.fullscreen .guide-frame{height:auto;min-height:0;flex:1}.guide-view.fullscreen .guide-toolbar{flex:0 0 auto;padding:12px 18px;background:#fff}body.guide-open{overflow:hidden}@media(max-width:760px){#tab-content:has(.guide-view){padding:0;border:0;background:transparent}.guide-frame{height:calc(100dvh - 280px);min-height:470px}.guide-toolbar{flex-wrap:wrap}}@media(max-width:760px){
+header{flex-wrap:wrap;row-gap:7px}
+.header-actions{width:100%;justify-content:flex-end;gap:8px}
+.header-actions button{padding:7px 10px;font-size:12px}
+.auth-tabs{margin-top:12px}
+}
+</style>
 <script src="./config.js?v=20261019-2"></script>
 <script type="module" src="./app.js?v=20261019-password"></script>
 </head><body>

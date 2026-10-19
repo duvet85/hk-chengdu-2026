@@ -1,38 +1,53 @@
 # Travel Wallet — private family trips
 
-Live frontend: https://duvet85.github.io/hk-chengdu-2026/wallet/
+**App:** https://duvet85.github.io/hk-chengdu-2026/wallet/
 
-This is a static mobile-friendly app shell. **No private information is stored in this repository.** Flight tickets, hotel vouchers, boarding passes and reservations must be stored in your Supabase project with RLS and a private Storage bucket.
+**Supabase backend:** Existing **TJY Project** (`fyvyjdocacqauqcdgowj`), Singapore region. Configured using the browser-safe publishable API key in `config.js`. No additional Supabase project or subscription is required.
 
-## Activation
+## Security model
 
-1. Create a **dedicated** Supabase project at https://supabase.com/dashboard/projects. Avoid using a database shared with unrelated apps.
-2. In SQL Editor run `schema.sql` in this folder.
-3. In Authentication > URL Configuration, add `https://duvet85.github.io/hk-chengdu-2026/wallet/` to redirect URLs. Set email auth/magic links as appropriate.
-4. Log in on the website once to create your auth user. You will see *awaiting family approval*.
-5. In SQL Editor, run:
+- The **GitHub repository is public and contains only code and configuration**. Never commit boarding passes, travel vouchers, private ticket numbers, passport data, documents or service-role API keys.
+- Five wallet-only public-schema tables: `wallet_members`, `trips`, `trip_stops`, `reservations`, `documents`. These are new and separate from existing TJY Project tables.
+- All wallet tables have **Row Level Security** enabled. Only users in `wallet_members` can read or modify trips, stops, reservations and documents. Non-members cannot self-approve.
+- Supabase Storage bucket **`travel-documents`** is private. Storage object access also checks family membership and a matching trip ID.
+- Viewing files uses **90-second signed links** issued to authenticated members.
+- Every approved family member currently has full access to every wallet trip; this is a shared family wallet, not personal folders.
+- Files are limited to 15 MB each. PDF, JPEG, PNG, WebP and Apple Wallet pass uploads are supported. Keep original reservations at your airline/hotel as backup.
+- No private PDFs or images are cached offline. This application requires internet to sign in and fetch documents.
+- The audited access rules do not expose `SECURITY DEFINER` RPC helpers.
+
+## Finish first-time login
+
+**The developer connector cannot modify Supabase Auth's redirect allowlist.**
+
+1. Open https://supabase.com/dashboard/project/fyvyjdocacqauqcdgowj/auth/url-configuration
+2. Under **Redirect URLs**, add:
+   `https://duvet85.github.io/hk-chengdu-2026/wallet/`
+   For production, keep only this exact URL as a wallet redirect (the project may have existing redirects belonging to other apps; do **not** delete them).
+3. Visit the live [wallet](https://duvet85.github.io/hk-chengdu-2026/wallet/), enter your own email and request a sign-in link. After you click the link in your email, the site should show **pending family approval**.
+4. Once your account exists in Supabase Authentication > Users, an administrator can approve it using the SQL Editor (or ask ChatGPT to do this, once you have completed sign-in):
    ```sql
-   insert into public.wallet_members (user_id,display_name)
-   select id,'Owner' from auth.users where email = 'YOUR_EMAIL@example.com'
+   insert into public.wallet_members (user_id, display_name)
+   select id, 'Owner'
+   from auth.users
+   where email = 'YOUR_SIGN_IN_EMAIL@example.com'
    on conflict (user_id) do nothing;
    ```
-   Repeat with a second approved account for your spouse. Use the *exact* email from Supabase Authentication > Users. Never place these addresses in public frontend source.
-6. In GitHub, edit `wallet/config.js` using only the Project URL and the Supabase **publishable/anon key** from Supabase Project Settings > API keys. These are designed for browser use, protected by RLS. Do not use a secret/service-role key.
-7. Open the live wallet and verify a whitelisted account can sign in, and that an unapproved account cannot read or upload files.
+5. Refresh the site to view your private wallet. Repeat for your spouse with a separate email account and a separate `wallet_members` row. Do **not** share magic links between devices.
 
-## Privacy
+## Database maintenance
 
-- The GitHub repository is **public**; it holds code only.
-- The `travel-documents` Supabase bucket is **private**. Its policy uses wallet membership and trip IDs.
-- PDFs/photos are uploaded through authenticated browser requests to Supabase, not to GitHub.
-- Documents are viewed with 90-second signed URLs. Avoid sharing those URLs.
-- The app does **not** cache documents offline. It supports HTML/JavaScript app access when online.
-- A family member has access to **all trips**. This is intentional for a two-person household wallet.
-- File limit 15 MB. For legal/financial-grade records, maintain original copies with the issuing providers.
-- Only publish code changes here. NEVER paste booking documents or credentials into issues, commits or pull requests.
+- The source `schema.sql` documents the full database schema and hardened access rules.
+- Original deployed Supabase migrations:
+  - `create_travel_wallet_private_tables`
+  - `harden_wallet_rls_without_exposed_definer_functions`
+- Re-running `schema.sql` is **not needed** in TJY Project. Existing users or data are not affected by wallet setup.
+- Supabase security advisor was checked after the hardening migration and had no findings.
 
-## Current limits
+## Product status
 
-- Functional add/view for trips, itinerary stops and reservation metadata; add/view/delete for documents.
-- Later enhancements: imports from existing trip planners, edit/delete trip data, secure document categories, device-local offline encryption, family invitations UI, backups, shared calendar.
-- The Supabase JS library loads from jsDelivr; travelers in China should download important travel essentials ahead or use provider apps in case the CDN is blocked.
+Built and published: login integration, private trips, itinerary stops, reservation metadata, private document upload, signed document views, file deletion, installable-app manifest.
+
+Pending real-device checks: email login (requires redirect allowlist), owner membership activation, upload/open/delete permission tests, iPhone user acceptance, import of prior trip itineraries.
+
+Planned features: edit trip/stops, import existing ChatGPT-generated itineraries, family invites UI, private attachments automatically imported from providers (with permission), encrypted offline document cache and backup/export.

@@ -45,7 +45,12 @@ async function authorize(){
  if(S.session){
    let r=await S.api.from('wallet_members').select('user_id').eq('user_id',S.session.user.id).maybeSingle();
    if(r.error)note('The vault database is not ready: '+r.error.message,'error');
-   else if(!r.data)note('Login succeeded, but your email has not yet been approved for this family wallet. The owner can add your Supabase user ID to wallet_members.');
+   else if(!r.data){
+     // Inserting membership is permitted by RLS only for a pre-approved, exact family email.
+     const invite=await S.api.from('wallet_members').insert({user_id:S.session.user.id,display_name:'Family member'});
+     if(!invite.error){S.member=true;note('')}
+     else note('Login succeeded, but this account is not approved for the family wallet.');
+   }
    else{S.member=true;note('')}
  }
  screen();if(S.member)await loadTrips();

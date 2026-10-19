@@ -1,0 +1,18 @@
+{
+  "name": "Travel Wallet",
+  "short_name": "Travel Wallet",
+  "description": "Private travel planning and documents for your family",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "theme_color": "#143d37",
+  "background_color": "#f7f7f3",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

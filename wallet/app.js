@@ -342,7 +342,7 @@ function renderPacking(scope){
  if(!isBase){
   toolbar+='<div class="pack-progress" role="progressbar" aria-label="Packing progress" aria-valuenow="'+percent+'" aria-valuemin="0" aria-valuemax="100"><div style="width:'+percent+'%"></div></div>';
   toolbar+='<div class="pack-progress-text">'+percent+'% complete'+(percent===100&&count?' · All packed!':'')+'</div>';
-  toolbar+='<div class="pack-toolbar">'+actionBtn('copy-base','↙ Copy base into trip','primary')+actionBtn('open-base','⚙ Edit base list')+actionBtn('save-to-base','↗ Add trip items to base')+actionBtn('filter',S.packingFilter==='all'?'◯ Show unpacked only':'☑ Show all')+(packed?actionBtn('reset','↺ Reset packed ticks'):'')+'</div>';
+  toolbar+='<div class="pack-toolbar">'+actionBtn('copy-base','↙ Copy base into trip','primary')+actionBtn('open-base','⚙ Edit base list')+actionBtn('save-to-base','↗ Add trip items to base')+actionBtn('replace-base','💾 Save trip as base')+actionBtn('filter',S.packingFilter==='all'?'◯ Show unpacked only':'☑ Show all')+(packed?actionBtn('reset','↺ Reset packed ticks'):'')+'</div>';
  }else{
   toolbar+='<div class="notice pack-note">This is a shared family base list. Editing it will affect future copies, not checklists already saved to individual trips.</div><div class="pack-toolbar">'+actionBtn('add-base','＋ Add base item','primary')+'</div>';
  }
@@ -474,6 +474,14 @@ async function handlePackingAction(button){
    if(r.error)throw r.error;
    await refreshPacking('base');
    toast('Saved '+missing.length+' new items to the reusable base.');
+  }else if(action==='replace-base'){
+   if(!S.trip)throw Error('Open a trip first.');
+   if(!S.packingItems.length)throw Error('An empty trip cannot replace your reusable base.');
+   if(!confirm('Save this trip as the new household base list? This replaces the current base items and quantities. Other trips will NOT be changed.'))return;
+   const r=await S.api.rpc('replace_packing_base_from_trip',{p_trip_id:S.trip.id});
+   if(r.error)throw r.error;
+   await refreshPacking('base');
+   toast('Saved '+r.data+' items as your new reusable base. Other trips were not changed.');
   }else if(action==='reset'){
    if(!S.trip||!confirm('Mark every item on this trip as unpacked? This cannot be undone.'))return;
    const r=await S.api.from('packing_trip_items').update({packed:false}).eq('trip_id',S.trip.id);

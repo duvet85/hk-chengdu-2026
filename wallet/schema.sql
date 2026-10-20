@@ -212,3 +212,30 @@ where not exists (
  where i.trip_id=t.id and lower(trim(i.name))=lower(trim(b.name))
  and lower(trim(i.category))=lower(trim(b.category))
 );
+
+-- Replacing the household base from a trip must be atomic; no half-saved templates.
+-- Runs as caller, respects RLS, and is explicitly unavailable to anonymous visitors.
+create or replace function public.replace_packing_base_from_trip(p_trip_id uuid)
+returns integer
+language plpgsql security invoker set search_path = ''
+as $fn$
+declare v_count integer;
+begin
+ if auth.uid() is null or not exists(select 1 from public.wallet_members m where m.user_id=auth.uid()) then
+   raise exception 'Not authorised to edit this household packing base' using errcode='42501';
+ end if;
+ if not exists(select 1 from public.trips t where t.id=p_trip_id) then
+   raise exception 'Trip not found or not accessible';
+ end if;
+ select count(*) into v_count from public.packing_trip_items i where i.trip_id=p_trip_id;
+ if v_count=0 then
+   raise exception 'Cannot replace the base with an empty checklist';
+ end if;
+ delete from public.packing_base_items;
+ insert into public.packing_base_items(category,name,quantity,notes,position)
+ select category,name,quantity,notes,position from public.packing_trip_items where trip_id=p_trip_id;
+ return v_count;
+end;
+$fn$;
+revoke all on function public.replace_packing_base_from_trip(uuid) from public,anon;
+grant execute on function public.replace_packing_base_from_trip(uuid) to authenticated;

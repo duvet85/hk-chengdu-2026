@@ -130,3 +130,85 @@ using(bucket_id='travel-documents' and exists (select 1 from public.wallet_membe
 -- select id,'Owner' from auth.users where email='YOUR_EMAIL@example.com'
 -- on conflict(user_id) do nothing;
 -- Repeat for your spouse.
+
+-- TRAVEL WALLET v2: PACKING (run on existing wallets to add reusable master + per-trip checklists)
+-- Master is shared by approved family members. Trip copies are independent and have their own packed state.
+create table if not exists public.packing_base_items (
+ id uuid primary key default gen_random_uuid(),
+ category text not null default 'Other' check (char_length(category) between 1 and 60),
+ name text not null check (char_length(name) between 1 and 150),
+ quantity integer not null default 1 check (quantity between 1 and 99),
+ notes text not null default '' check (char_length(notes) <= 1000),
+ position integer not null default 0,
+ created_at timestamptz not null default now()
+);
+create table if not exists public.packing_trip_items (
+ id uuid primary key default gen_random_uuid(),
+ trip_id uuid not null references public.trips(id) on delete cascade,
+ category text not null default 'Other' check (char_length(category) between 1 and 60),
+ name text not null check (char_length(name) between 1 and 150),
+ quantity integer not null default 1 check (quantity between 1 and 99),
+ notes text not null default '' check (char_length(notes) <= 1000),
+ packed boolean not null default false,
+ position integer not null default 0,
+ created_at timestamptz not null default now()
+);
+create index if not exists packing_base_items_sort_idx on public.packing_base_items(category,position);
+create index if not exists packing_trip_items_trip_idx on public.packing_trip_items(trip_id,category,position);
+alter table public.packing_base_items enable row level security;
+alter table public.packing_trip_items enable row level security;
+revoke all on public.packing_base_items,public.packing_trip_items from anon,authenticated;
+grant select,insert,update,delete on public.packing_base_items,public.packing_trip_items to authenticated;
+drop policy if exists packing_base_access on public.packing_base_items;
+create policy packing_base_access on public.packing_base_items for all to authenticated
+using (exists(select 1 from public.wallet_members m where m.user_id=(select auth.uid())))
+with check (exists(select 1 from public.wallet_members m where m.user_id=(select auth.uid())));
+drop policy if exists packing_trip_access on public.packing_trip_items;
+create policy packing_trip_access on public.packing_trip_items for all to authenticated
+using (exists(select 1 from public.wallet_members m where m.user_id=(select auth.uid())) and exists(select 1 from public.trips t where t.id=trip_id))
+with check (exists(select 1 from public.wallet_members m where m.user_id=(select auth.uid())) and exists(select 1 from public.trips t where t.id=trip_id));
+-- Seed only when no base items exist. You can change/delete every item in the app.
+with starter(category,name,quantity,notes,position) as (
+values
+ ('Documents','Passport',1,'Check validity for every traveller',10),
+ ('Documents','Travel wallet / cards',1,'Payment cards and some local currency',20),
+ ('Documents','Driving licence / International Driving Permit',1,'For any self-drive trip',30),
+ ('Documents','Flight and hotel confirmations',1,'Keep offline copies',40),
+ ('Documents','Travel insurance details',1,'Policy and emergency contact',50),
+ ('Clothing','Underwear',1,'Adjust quantity for the trip length',10),
+ ('Clothing','Socks',1,'Adjust quantity for the trip length',20),
+ ('Clothing','Tops / shirts',1,'Adjust for weather and duration',30),
+ ('Clothing','Bottoms',1,'Trousers, skirts or shorts as needed',40),
+ ('Clothing','Sleepwear',1,'',50),
+ ('Clothing','Comfortable walking shoes',1,'',60),
+ ('Clothing','Jacket / extra layers',1,'Adjust to destination weather',70),
+ ('Clothing','Laundry bag',1,'',80),
+ ('Toiletries','Toothbrush and toothpaste',1,'',10),
+ ('Toiletries','Skincare and sunscreen',1,'',20),
+ ('Toiletries','Shampoo / toiletries',1,'Check hotel amenities',30),
+ ('Toiletries','Deodorant',1,'',40),
+ ('Toiletries','Hairbrush / comb',1,'',50),
+ ('Electronics','Phone and charging cable',1,'',10),
+ ('Electronics','Universal travel power adapter',1,'Check destination plug type',20),
+ ('Electronics','Power bank',1,'Carry in cabin; check airline rules',30),
+ ('Electronics','Earphones',1,'',40),
+ ('Electronics','Camera / spare batteries',1,'Optional',50),
+ ('Health','Personal medications',1,'Pack enough for the full trip',10),
+ ('Health','Basic first-aid essentials',1,'',20),
+ ('Health','Hand sanitiser',1,'',30),
+ ('Travel essentials','Sunglasses',1,'',10),
+ ('Travel essentials','Umbrella / rain protection',1,'',20),
+ ('Travel essentials','Reusable water bottle',1,'',30),
+ ('Travel essentials','Tissues / wipes',1,'',40)
+)
+insert into public.packing_base_items(category,name,quantity,notes,position)
+select s.* from starter s where not exists (select 1 from public.packing_base_items);
+-- Give existing trips their own independent unchecked copies without duplicating existing entries.
+insert into public.packing_trip_items(trip_id,category,name,quantity,notes,position,packed)
+select t.id,b.category,b.name,b.quantity,b.notes,b.position,false
+from public.trips t cross join public.packing_base_items b
+where not exists (
+ select 1 from public.packing_trip_items i
+ where i.trip_id=t.id and lower(trim(i.name))=lower(trim(b.name))
+ and lower(trim(i.category))=lower(trim(b.category))
+);
